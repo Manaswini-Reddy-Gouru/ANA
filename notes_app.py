@@ -6,7 +6,7 @@ import os
 import google.generativeai as genai
 
 # Configure API key
-genai.configure(api_key=os.getenv("AIzaSyCU9y4eX3wCsgXR8m0UxI_hsdtFuWsuEIM"))
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # App title
 st.title("📘 AI Notes Assistant")
