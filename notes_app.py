@@ -5,10 +5,8 @@ import PyPDF2
 import os
 import google.generativeai as genai
 
-
-# Initialize client
-client = genai.Client(api_key=os.getenv("AIzaSyCU9y4eX3wCsgXR8m0UxI_hsdtFuWsuEIM"))
-
+# Configure API key
+genai.configure(api_key=os.getenv("AIzaSyCU9y4eX3wCsgXR8m0UxI_hsdtFuWsuEIM"))
 
 # App title
 st.title("📘 AI Notes Assistant")
@@ -22,32 +20,32 @@ tab1, tab2, tab3 = st.tabs([
 
 # --- Tab 1: Generate Notes ---
 with tab1:
-    topic = st.text_input("Enter a topic for notes:", key="tab1_topic")
+    topic = st.text_input("Enter a topic for notes:")
 
-    if st.button("Generate Notes", key="tab1_generate"):
+    if st.button("Generate Notes", key="gen_notes_btn"):
         if topic.strip():
             with st.spinner("Generating notes..."):
-                response = client.models.generate_content(
-                    model="gemini-1.5-flash",
-                    contents=f"Write detailed, structured notes on {topic}."
+                model = genai.GenerativeModel("gemini-1.5-flash")
+                response = model.generate_content(
+                    f"Write detailed, structured notes on {topic}."
                 )
                 notes_text = response.text
                 st.subheader("📖 Generated Notes")
                 st.write(notes_text)
 
+                # Save to file
                 with open("notes.txt", "w", encoding="utf-8") as f:
                     f.write(notes_text)
 
+                # Download button
                 st.download_button(
                     label="💾 Download Notes",
                     data=notes_text,
                     file_name="notes.txt",
-                    mime="text/plain",
-                    key="tab1_download"
+                    mime="text/plain"
                 )
         else:
             st.warning("⚠️ Please enter a topic first.")
-
 
 # --- Tab 2: Summarize Notes ---
 with tab2:
@@ -56,7 +54,7 @@ with tab2:
     uploaded_file = st.file_uploader(
         "Upload your notes (.pdf or .doc/.docx)",
         type=["pdf", "doc", "docx"],
-        key="tab2_upload"
+        key="upload_summary"
     )
     notes_to_summarize = ""
 
@@ -70,78 +68,86 @@ with tab2:
             for para in doc.paragraphs:
                 notes_to_summarize += para.text + "\n"
     else:
-        notes_to_summarize = st.text_area("Or paste your notes here:", height=200, key="tab2_textarea")
+        notes_to_summarize = st.text_area(
+            "Or paste your notes here:",
+            height=200,
+            key="paste_summary"
+        )
 
-    if st.button("Summarize Notes", key="tab2_summarize"):
+    if st.button("Summarize Notes", key="summarize_btn"):
         if notes_to_summarize.strip():
             with st.spinner("Summarizing your notes..."):
-                response = client.models.generate_content(
-                    model="gemini-1.5-flash",
-                    contents=f"Summarize the following notes:\n\n{notes_to_summarize}"
+                model = genai.GenerativeModel("gemini-1.5-flash")
+                response = model.generate_content(
+                    f"Summarize the following notes:\n\n{notes_to_summarize}"
                 )
                 summary_text = response.text
 
                 st.subheader("📝 Summary")
                 st.write(summary_text)
 
+                # Save summary to file
                 with open("summary.txt", "w", encoding="utf-8") as f:
                     f.write(summary_text)
 
+                # Download button
                 st.download_button(
                     label="💾 Download Summary",
                     data=summary_text,
                     file_name="summary.txt",
-                    mime="text/plain",
-                    key="tab2_download"
+                    mime="text/plain"
                 )
         else:
             st.warning("⚠️ Please upload a file or paste some notes.")
 
-
 # --- Tab 3: Generate Study Questions ---
 with tab3:
-    uploaded_file_q = st.file_uploader(
-        "Upload your notes (.pdf or .doc/.docx) for questions",
+    uploaded_notes = st.file_uploader(
+        "Upload notes for MCQs (.pdf or .doc/.docx)",
         type=["pdf", "doc", "docx"],
-        key="tab3_upload"
+        key="upload_mcqs"
     )
     notes_for_questions = ""
 
-    if uploaded_file_q is not None:
-        if uploaded_file_q.name.endswith(".pdf"):
-            reader = PyPDF2.PdfReader(uploaded_file_q)
+    if uploaded_notes is not None:
+        if uploaded_notes.name.endswith(".pdf"):
+            reader = PyPDF2.PdfReader(uploaded_notes)
             for page in reader.pages:
                 notes_for_questions += page.extract_text() + "\n"
-        elif uploaded_file_q.name.endswith((".doc", ".docx")):
-            doc = docx.Document(uploaded_file_q)
+        elif uploaded_notes.name.endswith((".doc", ".docx")):
+            doc = docx.Document(uploaded_notes)
             for para in doc.paragraphs:
                 notes_for_questions += para.text + "\n"
     else:
-        notes_for_questions = st.text_area("Or paste your notes here:", height=200, key="tab3_textarea")
+        notes_for_questions = st.text_area(
+            "Or paste your notes here to generate MCQs:",
+            height=200,
+            key="paste_mcqs"
+        )
 
     if "mcqs" not in st.session_state:
         st.session_state.mcqs = []
         st.session_state.user_answers = []
         st.session_state.show_results = False
 
-    if st.button("Generate MCQs", key="tab3_generate"):
+    if st.button("Generate MCQs", key="gen_mcqs_btn"):
         if notes_for_questions.strip():
+            # Determine number of MCQs based on content length
             num_words = len(notes_for_questions.split())
-            num_mcqs = max(10, min(20, num_words // 80))
+            num_mcqs = max(10, min(20, num_words // 80))  # 1 MCQ per ~80 words
 
             with st.spinner(f"Generating {num_mcqs} multiple-choice questions..."):
-                response = client.models.generate_content(
-                    model="gemini-1.5-flash",
-                    contents=(
-                        f"From these notes, generate {num_mcqs} multiple-choice questions (MCQs). "
-                        "Each question should have 4 options (A, B, C, D). "
-                        "Clearly mark the correct answer with 'Answer: X'. "
-                        "Format exactly like:\n\n"
-                        "Q1. Question text?\nA) ...\nB) ...\nC) ...\nD) ...\nAnswer: B\n\n"
-                        f"Notes:\n{notes_for_questions}"
-                    )
+                model = genai.GenerativeModel("gemini-1.5-flash")
+                response = model.generate_content(
+                    f"From these notes, generate {num_mcqs} multiple-choice questions (MCQs). "
+                    "Each question should have 4 options (A, B, C, D). "
+                    "Clearly mark the correct answer with 'Answer: X'. "
+                    "Format exactly like:\n\n"
+                    "Q1. Question text?\nA) ...\nB) ...\nC) ...\nD) ...\nAnswer: B\n\n"
+                    f"Notes:\n{notes_for_questions}"
                 )
 
+            # Parse MCQs
             raw_mcqs = response.text
             questions = re.split(r"Q\d+\.", raw_mcqs)
             mcqs_list = []
@@ -153,7 +159,10 @@ with tab3:
                 question_text = parts[0]
                 options = [p for p in parts[1:5]]
                 answer_line = [p for p in parts if p.startswith("Answer:")]
-                correct_answer = answer_line[0].split(":")[-1].strip() if answer_line else None
+                correct_answer = (
+                    answer_line[0].split(":")[-1].strip()
+                    if answer_line else None
+                )
                 mcqs_list.append({
                     "question": question_text,
                     "options": options,
@@ -164,7 +173,7 @@ with tab3:
             st.session_state.user_answers = [""] * len(mcqs_list)
             st.session_state.show_results = False
         else:
-            st.warning("⚠️ Please upload a file or paste your notes first.")
+            st.warning("⚠️ Please upload or paste your notes first.")
 
     if st.session_state.mcqs:
         st.subheader("🎯 Quiz Time!")
@@ -172,10 +181,10 @@ with tab3:
             st.session_state.user_answers[idx] = st.radio(
                 f"Q{idx+1}. {mcq['question']}",
                 options=mcq["options"],
-                key=f"tab3_q_{idx}"
+                key=f"q_{idx}"
             )
 
-        if st.button("Submit Quiz", key="tab3_submit"):
+        if st.button("Submit Quiz", key="submit_quiz_btn"):
             st.session_state.show_results = True
 
         if st.session_state.show_results:
@@ -192,5 +201,3 @@ with tab3:
                     st.error(f"❌ Wrong. Your answer: {user_ans} | Correct answer: {correct_ans}")
                 st.write("---")
             st.subheader(f"🏆 Your Score: {score}/{len(st.session_state.mcqs)}")
-
-
