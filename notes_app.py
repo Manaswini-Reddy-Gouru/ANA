@@ -2,10 +2,12 @@ import streamlit as st
 import re
 import docx
 import PyPDF2
+import os
 from google import genai
 
 # Initialize client
-client = genai.Client(api_key="AIzaSyCU9y4eX3wCsgXR8m0UxI_hsdtFuWsuEIM")
+client = genai.Client(api_key=os.getenv("AIzaSyCU9y4eX3wCsgXR8m0UxI_hsdtFuWsuEIM"))
+
 
 # App title
 st.title("📘 AI Notes Assistant")
@@ -189,3 +191,4 @@ with tab3:
                     st.error(f"❌ Wrong. Your answer: {user_ans} | Correct answer: {correct_ans}")
                 st.write("---")
             st.subheader(f"🏆 Your Score: {score}/{len(st.session_state.mcqs)}")
+
