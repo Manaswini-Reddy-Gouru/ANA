@@ -1,4 +1,4 @@
-import streamlit as stimport streamlit as st
+import streamlit as st
 import re
 import docx
 import PyPDF2
@@ -201,5 +201,6 @@ with tab3:
                     st.error(f"❌ Wrong. Your answer: {user_ans} | Correct answer: {correct_ans}")
                 st.write("---")
             st.subheader(f"🏆 Your Score: {score}/{len(st.session_state.mcqs)}")
+
 
 
