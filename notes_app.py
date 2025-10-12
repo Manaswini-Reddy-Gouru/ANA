@@ -8,7 +8,6 @@ import google.generativeai as genai
 # Configure API key
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-
 # App title
 st.title("📘 AI Notes Assistant")
 
@@ -26,10 +25,9 @@ with tab1:
     if st.button("Generate Notes", key="gen_notes_btn"):
         if topic.strip():
             with st.spinner("Generating notes..."):
-                model = "models/text-bison-001"
-                response = genai.generate_text(
-                    model=model,
-                    prompt=f"Write detailed, structured notes on {topic}."
+                model = genai.GenerativeModel("gemini-1.5-flash")
+                response = model.generate_content(
+                    f"Write detailed, structured notes on {topic}."
                 )
                 notes_text = response.text
                 st.subheader("📖 Generated Notes")
@@ -79,13 +77,11 @@ with tab2:
     if st.button("Summarize Notes", key="summarize_btn"):
         if notes_to_summarize.strip():
             with st.spinner("Summarizing your notes..."):
-                model = "models/text-bison-001"
-                response = genai.generate_text(
-                    model=model,
-                    prompt=f"Summarize the following notes:\n\n{notes_to_summarize}"
+                model = genai.GenerativeModel("gemini-1.5-flash")
+                response = model.generate_content(
+                    f"Summarize the following notes:\n\n{notes_to_summarize}"
                 )
                 summary_text = response.text
-
 
                 st.subheader("📝 Summary")
                 st.write(summary_text)
@@ -141,20 +137,18 @@ with tab3:
             num_mcqs = max(10, min(20, num_words // 80))  # 1 MCQ per ~80 words
 
             with st.spinner(f"Generating {num_mcqs} multiple-choice questions..."):
-                model = "models/text-bison-001"
-                response = genai.generate_text(
-                    model=model,
-                    prompt=(
-                        f"From these notes, generate {num_mcqs} multiple-choice questions (MCQs). "
-                        "Each question should have 4 options (A, B, C, D). "
-                        "Clearly mark the correct answer with 'Answer: X'. "
-                        "Format exactly like:\n\n"
-                        "Q1. Question text?\nA) ...\nB) ...\nC) ...\nD) ...\nAnswer: B\n\n"
-                        f"Notes:\n{notes_for_questions}"
-                    )
+                model = genai.GenerativeModel("gemini-1.5-flash")
+                response = model.generate_content(
+                    f"From these notes, generate {num_mcqs} multiple-choice questions (MCQs). "
+                    "Each question should have 4 options (A, B, C, D). "
+                    "Clearly mark the correct answer with 'Answer: X'. "
+                    "Format exactly like:\n\n"
+                    "Q1. Question text?\nA) ...\nB) ...\nC) ...\nD) ...\nAnswer: B\n\n"
+                    f"Notes:\n{notes_for_questions}"
                 )
-                raw_mcqs = response.text
 
+            # Parse MCQs
+            raw_mcqs = response.text
             questions = re.split(r"Q\d+\.", raw_mcqs)
             mcqs_list = []
 
