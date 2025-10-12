@@ -6,7 +6,7 @@ import os
 import google.generativeai as genai
 
 # Configure API key
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"), api_base="https://generativelanguage.googleapis.com/v1")
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
 # App title
