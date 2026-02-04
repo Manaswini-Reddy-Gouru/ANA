@@ -6,7 +6,7 @@ import os
 import google.generativeai as genai
 
 # Configure API key
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+genai.configure(api_key=os.getenv("AIzaSyAfckxpkLr_alI-c2aOo6lsuq9Z1BR9kRw"))
 
 # App title
 st.title("📘 AI Notes Assistant")
@@ -201,5 +201,6 @@ with tab3:
                     st.error(f"❌ Wrong. Your answer: {user_ans} | Correct answer: {correct_ans}")
                 st.write("---")
             st.subheader(f"🏆 Your Score: {score}/{len(st.session_state.mcqs)}")
+
 
 
