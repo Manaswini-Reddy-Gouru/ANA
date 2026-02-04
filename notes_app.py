@@ -25,7 +25,7 @@ with tab1:
     if st.button("Generate Notes", key="gen_notes_btn"):
         if topic.strip():
             with st.spinner("Generating notes..."):
-                model = genai.GenerativeModel("gemini-2.0-flash")
+                model = genai.GenerativeModel("gemini-1.5-flash")
                 response = model.generate_content(
                     f"Write detailed, structured notes on {topic}."
                 )
@@ -77,7 +77,7 @@ with tab2:
     if st.button("Summarize Notes", key="summarize_btn"):
         if notes_to_summarize.strip():
             with st.spinner("Summarizing your notes..."):
-                model = genai.GenerativeModel("gemini-2.0-flash")
+                model = genai.GenerativeModel("gemini-1.5-flash")
                 response = model.generate_content(
                     f"Summarize the following notes:\n\n{notes_to_summarize}"
                 )
@@ -137,7 +137,7 @@ with tab3:
             num_mcqs = max(10, min(20, num_words // 80))  # 1 MCQ per ~80 words
 
             with st.spinner(f"Generating {num_mcqs} multiple-choice questions..."):
-                model = genai.GenerativeModel("gemini-2.0-flash")
+                model = genai.GenerativeModel("gemini-1.5-flash")
                 response = model.generate_content(
                     f"From these notes, generate {num_mcqs} multiple-choice questions (MCQs). "
                     "Each question should have 4 options (A, B, C, D). "
@@ -201,4 +201,5 @@ with tab3:
                     st.error(f"❌ Wrong. Your answer: {user_ans} | Correct answer: {correct_ans}")
                 st.write("---")
             st.subheader(f"🏆 Your Score: {score}/{len(st.session_state.mcqs)}")
+
 
